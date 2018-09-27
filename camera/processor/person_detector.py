@@ -1,7 +1,7 @@
 from __future__ import print_function
 from imutils.video.pivideostream import PiVideoStream
 from imutils.object_detection import non_max_suppression
-from datetime improt datetime
+from datetime import datetime
 import imutils
 import time
 import numpy as np
