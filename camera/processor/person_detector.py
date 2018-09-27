@@ -1,18 +1,35 @@
 from __future__ import print_function
 from imutils.video.pivideostream import PiVideoStream
 from imutils.object_detection import non_max_suppression
+from datetime improt datetime
 import imutils
 import time
 import numpy as np
 import cv2
+import ambient
+import os
+import sys
 
+try:        
+    AMBIENT_CHANNEL_ID = int(os.environ['AMBIENT_CHANNEL_ID'])
+    AMBIENT_WRITE_KEY = os.environ['AMBIENT_WRITE_KEY']
+except KeyError as e:
+    sys.exit('Couldn\'t find env: {}'.format(e))
+
+am = ambient.Ambient(AMBIENT_CHANNEL_ID, AMBIENT_WRITE_KEY)
 
 net = cv2.dnn.readNetFromCaffe('/home/pi/models/MobileNetSSD_deploy.prototxt',
         '/home/pi/models/MobileNetSSD_deploy.caffemodel')
 
+def request(count):
+    am.send({
+        'created': datetime.now().strftime('%Y-%m-%d %H:%M:%S'),
+        'd1': count,
+    })
 
 class PersonDetector(object):
     def __init__(self, flip = True):
+        self.last_upload = time.time()
         self.vs = PiVideoStream(resolution=(800, 608)).start()
         self.flip = flip
         time.sleep(2.0)
@@ -59,5 +76,9 @@ class PersonDetector(object):
         
         if count > 0:
             print('Count: {}'.format(count))
-                
+        elapsed = time.time() -self.last_upload
+        if elapsed > 30:
+        request(count)
+        self.last_upload = time.time()
+        
         return frame
